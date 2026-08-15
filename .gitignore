@@ -25,3 +25,6 @@ shp_water_dnr_hydrography/
 *.shx
 *.sbn
 *.sbx
+
+# keep the prebuilt interactive map
+!mn_lakes_with_grouped_markers.html

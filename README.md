@@ -4,7 +4,7 @@ Reference implementation for *Nash-informed Planning for Public-Resource Coordin
 An Application to Aquatic Invasive Species Prevention*. The framework takes the pure Nash
 equilibrium of a decentralized integer programming game (IPG) as the input to a
 welfare-improving planning step constrained by individual rationality (IR), and measures the
-welfare cost of that participation guarantee — the *price of individual rationality* (PIR).
+welfare cost of those participation rationality constraints — the *price of individual rationality* (PIR).
 It is instantiated on three game classes — edge-weighted budgeted maximum coverage (EBMC),
 the knapsack problem game (KPG), and the kidney-exchange game (KEG) — and applied to a
 Minnesota aquatic-invasive-species (AIS) inspection case study.
@@ -87,7 +87,7 @@ open-water polygons (`dnr_hydro_features_all`) from the Minnesota Geospatial Com
 python scripts/prepare_lake_shapes.py --hydro path/to/dnr_hydro_features_all.shp
 ```
 
-A prebuilt copy of the interactive map is attached to the latest GitHub Release.
+A prebuilt copy of the interactive map (`mn_lakes_with_grouped_markers.html`) is included in this repository; download it and open it in a browser.
 
 ## Precomputed results
 
