@@ -1,0 +1,3 @@
+# The prebuilt interactive map is a large generated artifact, not source code.
+# Exclude it from GitHub's language statistics (and collapse it in diffs).
+mn_lakes_with_grouped_markers.html linguist-generated=true
