@@ -32,7 +32,7 @@ from nash_informed.ebmc import (
     load_minnesota_instance,
     solve_sw, solve_gc, solve_bgc, solve_bsw, solve_bc, solve_non_game,
     find_pne_bzr, compute_utility,
-    MN_NON_COALITIONS, bc3_coal_kwargs,
+    bc1_kwargs, bc2_kwargs, bc3_kwargs, nvc_kwargs,
 )
 from nash_informed.common import construct_reference_utility
 
@@ -238,23 +238,23 @@ def run_single_percentage(pct, args, cfg, out_dir):
         tailored['BC_1'] = solve_bc(
             inst, ir_ref=ref_u, time_limit=args.bc_time_limit, only_playing=True,
             warm_start=best_pne['selected_lakes'] if best_pne else None,
-            config=cfg, non_coalitions=MN_NON_COALITIONS, min_retention=2)
+            config=cfg, **bc1_kwargs(counties_playing))
         tailored['BC_2'] = solve_bc(
             inst, ir_ref=ref_u, time_limit=args.bc_time_limit, only_playing=True,
             warm_start=best_pne['selected_lakes'] if best_pne else None,
-            config=cfg, max_num_groups=10, max_group_size=10)
-        ack = bc3_coal_kwargs(counties_playing)
+            config=cfg, **bc2_kwargs(counties_playing))
         tailored['BC_3'] = solve_bc(
             inst, ir_ref=ref_u, time_limit=args.bc_time_limit, only_playing=True,
             warm_start=best_pne['selected_lakes'] if best_pne else None,
-            config=cfg, **ack)
-        tailored['BC3_coal_0'] = solve_bc(
+            config=cfg, **bc3_kwargs(counties_playing))
+        nvk = nvc_kwargs(counties_playing)
+        tailored['NVC'] = solve_bc(
             inst, ir_ref={c: 0.0 for c in counties_playing},
-            time_limit=args.bc_time_limit, only_playing=True, config=cfg, **ack)
-        tailored['BC3_coal_1'] = solve_bc(
+            time_limit=args.bc_time_limit, only_playing=True, config=cfg, **nvk)
+        tailored['BC_NVC'] = solve_bc(
             inst, ir_ref=ref_u, time_limit=args.bc_time_limit, only_playing=True,
             warm_start=best_pne['selected_lakes'] if best_pne else None,
-            config=cfg, **ack)
+            config=cfg, **nvk)
 
         df_tailored = pd.DataFrame({
             'num_cts': [n_cts], 'num_lakes': [n_lakes],

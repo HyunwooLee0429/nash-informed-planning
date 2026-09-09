@@ -263,8 +263,9 @@ def solve_bc(
     warm_start: Iterable | None = None,
     config: dict | None = None,
     # --- tailored-variant parameters (all optional) ---
-    non_coalitions: Iterable | None = None,    # counties forced into group 0 alone (Opt-out)
-    min_retention: int = 2,                    # min budget retention for non-non_coalition counties
+    non_coalitions: Iterable | None = None,    # counties acting alone in group 0 (own-budget cap)
+    retention_counties: Iterable | None = None,  # counties subject to the budget-retention constraint
+    retention_alpha: int = 2,                  # max budget units deployable outside the own coalition
     max_num_groups: int | None = None,         # cap on # active groups (size-limited)
     max_group_size: int | None = None,         # cap on # counties per group (size-limited)
     fixed_groupings: dict | None = None,       # {group_id -> list[county]} (predetermined groupings)
@@ -275,14 +276,21 @@ def solve_bc(
 
     Per-county IR is enforced on the destination-county's incoming arcs.
 
-    Tailored variants (apply independently — pass only the kwargs you need):
-      * `non_coalitions`         : Opt-out (BC_1) — listed counties are forced into group 0
-                                    and keep at least their full budget; others must keep
-                                    `min_retention` budget out of group 0.
-      * `max_num_groups`+`max_group_size` : Size-limited (BC_2) — limit on active groups
-                                    and coalition cardinality.
-      * `fixed_groupings`        : Predetermined groupings (BC_3) — dict mapping
-                                    group id to a list of counties forced into that group.
+    Tailored constraints (independent — combine the kwargs the variant needs;
+    ready-made kwarg builders live in `datasets.minnesota_groups`):
+      * `non_coalitions`         : listed counties act alone in group 0 with an
+                                    own-budget cap; all other counties are kept out
+                                    of group 0. (Opt-out, BC_1; also NVC/BC_NVC.)
+      * `retention_counties` + `retention_alpha` : each listed county deploys at
+                                    least (budget - alpha) of its own lakes, i.e.
+                                    at most alpha units leave its coalition's
+                                    selection. (BC_1 non-opt-out counties; all
+                                    counties in BC_2 and BC_3.)
+      * `max_num_groups`+`max_group_size` : limit on active groups and coalition
+                                    cardinality. (Size-limited, BC_2.)
+      * `fixed_groupings`        : dict mapping group id to the list of counties
+                                    forced into that group. (Predetermined
+                                    groupings, BC_3; also NVC/BC_NVC coalitions.)
     """
     cfg = dict(DEFAULT_CONFIG)
     if config:
@@ -358,12 +366,11 @@ def solve_bc(
     # ----- Tailored variants -----
     if non_coalitions is not None:
         nc_set = set(non_coalitions)
-        # Counties in nc_set: forced into group 0 alone. Others: must keep min_retention
-        # budget in OWN coalition (= NOT group 0).
+        # Counties in nc_set: act alone in group 0, capped at their own budget.
+        # All other counties are kept out of group 0.
         for c in counties_use:
             if c in nc_set:
                 model.addConstr(z_vars[c, 0] == 1, name=f"opt_out_z_{c}")
-                # And keep at least their full budget in group 0
                 model.addConstr(
                     gp.quicksum(x_vars[i, 0] for i in instance.I_c[c])
                     <= instance.county_budget[c],
@@ -371,13 +378,18 @@ def solve_bc(
                 )
             else:
                 model.addConstr(z_vars[c, 0] == 0, name=f"not_opt_out_z_{c}")
-                # Non-opt-out counties: must keep min_retention budget in their group g > 0
-                model.addConstr(
-                    gp.quicksum(
-                        x_vars[i, g] for i in instance.I_c[c] for g in range(1, num_groups)
-                    ) >= instance.county_budget[c] - min_retention,
-                    name=f"min_retention_{c}",
-                )
+
+    if retention_counties is not None:
+        # Budget retention: each listed county deploys at least
+        # (budget - retention_alpha) units on its own lakes (summed over groups;
+        # the x-z link confines the selection to the county's coalition).
+        for c in retention_counties:
+            model.addConstr(
+                gp.quicksum(
+                    x_vars[i, g] for i in instance.I_c[c] for g in groups
+                ) >= instance.county_budget[c] - retention_alpha,
+                name=f"retention_{c}",
+            )
 
     if max_num_groups is not None or max_group_size is not None:
         # Auxiliary: is group g active?

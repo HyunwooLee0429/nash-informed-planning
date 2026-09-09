@@ -58,11 +58,15 @@ from .bsw import (
 from .pipeline import run_pipeline_bzr
 from .datasets.minnesota_groups import (
     MN_NON_COALITIONS,
-    MN_BC3_COAL1,
-    MN_BC3_COAL2,
-    get_bc3_noncoal,
+    MN_DNR_REGIONS,
+    MN_NVC_COAL1,
+    MN_NVC_COAL2,
+    get_nvc_noncoal,
     BC_VARIANTS,
-    bc3_coal_kwargs,
+    bc1_kwargs,
+    bc2_kwargs,
+    bc3_kwargs,
+    nvc_kwargs,
 )
 
 __all__ = [
@@ -94,9 +98,13 @@ __all__ = [
     "make_first_feasible_callback",
     "run_pipeline_bzr",
     "MN_NON_COALITIONS",
-    "MN_BC3_COAL1",
-    "MN_BC3_COAL2",
-    "get_bc3_noncoal",
+    "MN_DNR_REGIONS",
+    "MN_NVC_COAL1",
+    "MN_NVC_COAL2",
+    "get_nvc_noncoal",
     "BC_VARIANTS",
-    "bc3_coal_kwargs",
+    "bc1_kwargs",
+    "bc2_kwargs",
+    "bc3_kwargs",
+    "nvc_kwargs",
 ]
